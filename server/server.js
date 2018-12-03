@@ -20,10 +20,11 @@ firebase.initializeApp({
 var db = firebase.database();
 
 var ref = db.ref("login");
+var pef = db.ref("products");
+var cartRef = db.ref("cart");
 
 
-
-var port =  8081; 
+var port = 8081; 
 
 var router = express.Router();
 
@@ -82,23 +83,39 @@ router.route('/auth/:user/:pass')
                 key: data.key, //this is to get the ID, if needed
                 username: data.val ().username,
                 password: data.val ().password,
-                verified: data.val().verified
+                verified: data.val().verified, 
+                status: data.val().status
               }
               list.push (item);
             })
         }
         for(var j = 0; j < list.length; j++){
-            if(req.params.user == list[j].username && list[j].verifired == true){
-                console.log("huh");
-                if(passwordHash.verify(req.params.pass, list[j].password))
-                    res.json("Sucess");
-                else
+            
+            if(req.params.user == list[j].username && list[j].verified == true && list[j].status == "activated"){
+                if(passwordHash.verify(req.params.pass, list[j].password)){
+                    if(req.params.user == "admin"){
+                        res.json("ADMIN_Sucess")
+                        return;
+                    }
+                    else{
+                        cartRef.push().set({
+                            user: req.params.user,
+                            items: {item: "None"},
+                            total: 0.00
+                        })
+                        res.json("Sucess");
+                        return;
+                    }
+                }
+                else{
                     res.json("Fail");
+                    return;
+                }
             } 
                 
         } 
         
-        //res.json("Username does not exist");
+        res.json("Username does not exist");
         
     });
     
@@ -153,7 +170,7 @@ router.route('/newuser')
                 })
             }
             
-            var verificationLink = "https://se3316-jarms3-lab5-jarms3.c9users.io:8081/api/confirm_email/" + userID;
+            var verificationLink = "https://se3316-jarms3-lab05-jarms3.c9users.io:8081/api/confirm_email/" + userID;
             sendVerificationEmail(req.body.user, verificationLink);
         });
         
@@ -170,6 +187,90 @@ router.route('/confirm_email/:id')
     var nice = ref.child("users/" + uid);
     nice.update({verified: true});
     res.json("VERIFIED");
+    
+});
+
+router.route('/products')
+
+.get(function(req, res){
+     pef.once('value', function(snap){
+        if (snap.val () == null) {
+                
+        } else { 
+            var list = new Array ();
+            snap.forEach (function (data) {
+              var item = {
+                key: data.key, //this is to get the ID, if needed
+                name: data.val().name,
+                price: data.val().price,
+                quantity: data.val().quantity,
+                tax: data.val().tax
+              }
+              list.push (item);
+            })
+            
+            res.json(list);
+        }
+     });
+})
+
+router.route('/cart')
+
+.post(function(req, res){
+    var price = req.body.cost;
+    var amount = req.body.quantity;
+    var tax = req.body.taxrate;
+    var username = req.body.username;
+    var prodKey;
+    var key;
+    var check;
+    var total = (price * (1+tax))*amount;
+    pef.once('value', function(prod){
+        prod.forEach(function(data){
+            if(req.body.item == data.val().name)
+                prodKey = data.key;
+        })
+        
+        var upQ = pef.child(prodKey);
+        upQ.update({quantity: req.body.original - amount})
+    })
+    cartRef.once('value', function(snap){
+        snap.forEach(function(data) {
+            if(username == data.val().user){
+                key = data.key;
+                var s = cartRef.child(key);
+                var add = data.val().total;
+                total += add;
+                s.update({total: total})
+            
+                var itemref = cartRef.child(key + "/items");
+                itemref.once('value', function(snip){
+                    snip.forEach(function(deta){
+                        if(deta.val().name == req.body.item)
+                            check = true;
+                    });
+                    
+                    if(!check){
+                       itemref.push().set({
+                            name: req.body.item
+                        }); 
+                    }
+                    
+                    
+                });
+                
+            }
+        });
+        
+        
+    });
+    
+    
+})
+
+router.route('/cart/:username')
+
+.get(function(req, res){
     
 })
 
