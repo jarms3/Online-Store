@@ -24,6 +24,7 @@ var pef = db.ref("products");
 var cartRef = db.ref("cart");
 
 
+
 var port = 8081; 
 
 var router = express.Router();
@@ -271,7 +272,55 @@ router.route('/cart')
 router.route('/cart/:username')
 
 .get(function(req, res){
-    
+    var username = req.params.username;
+    var key;
+    var total;
+    cartRef.once('value', function(snap){
+        snap.forEach(function(data) {
+            if(username == data.val().user){
+                key = data.key;
+                var list = new Array ();
+                total = data.val().total;
+                var removeRef = cartRef.child(key + "/items/item");
+                removeRef.remove();
+                
+                var listRef = cartRef.child(key + "/items"); 
+                listRef.once('value', function(cap){
+                    cap.forEach(function(item){
+                        list.push(item.val().name);
+                    })
+                    
+                    var cart = {
+                        names: list,
+                        total: total
+                    }
+                    
+                     res.json(cart);
+                })
+                
+               
+            }
+        });
+       
+    });
+})
+
+router.route('comments/:name')
+
+.get(function(req, res){
+    var comments = new Array();
+    pef.once('value', function(snap){
+        snap.forEach(function(dink){
+            if(req.params.name == dink.val().name){
+                pef.child(dink.key + "/comments").once('value', function(comm){
+                    
+                    comments.push(comm.comments);
+                })
+                
+                res.json(comments);
+            }
+        });
+    });
 })
 
 app.listen(port);
