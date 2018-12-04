@@ -206,7 +206,8 @@ router.route('/products')
                 price: data.val().price,
                 quantity: data.val().quantity,
                 tax: data.val().tax,
-                rating: data.val().rating
+                rating: data.val().rating,
+                description: data.val().description
               }
               list.push (item);
             })
@@ -230,6 +231,21 @@ router.route('/products')
            }
        });
     });
+})
+
+.post(function(req, res){
+    pef.push().set({
+        name: req.body.item,
+        description: req.body.description,
+        price: req.body.p,
+        quantity: req.body.amount,
+        tax: req.body.t,
+        rateCount: 0,
+        rateSum: 0,
+        rating: 0
+    });
+    
+    res.json("Item added");
 })
 
 router.route('/cart')
