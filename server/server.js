@@ -99,11 +99,18 @@ router.route('/auth/:user/:pass')
                         return;
                     }
                     else{
-                        cartRef.push().set({
-                            user: req.params.user,
-                            items: {item: "None"},
-                            total: 0.00
-                        })
+                        
+                        cartRef.once('value', function(cart){
+                            cart.forEach(function(item){
+                                if(item.val().user == req.params.user){
+                                    cartRef.child(item.key + "/items").remove();
+                                    cartRef.child(item.key).update({total: 0.00});
+                                }else
+                                    cartRef.push().set({user: req.params.user, total: 0.00});
+                            });
+                        });
+                            
+                        
                         res.json("Sucess");
                         return;
                     }
@@ -281,7 +288,7 @@ router.route('/cart')
     var prodKey;
     var key;
     var check;
-    var total = (price * (1+tax))*amount;
+    var total = (price * amount)*(1+tax);
     pef.once('value', function(prod){
         prod.forEach(function(data){
             if(req.body.item == data.val().name)
@@ -328,6 +335,7 @@ router.route('/cart')
 router.route('/cart/:username')
 
 .get(function(req, res){
+    console.log("yep");
     var username = req.params.username;
     var key;
     var total;
@@ -337,8 +345,6 @@ router.route('/cart/:username')
                 key = data.key;
                 var list = new Array ();
                 total = data.val().total;
-                var removeRef = cartRef.child(key + "/items/item");
-                removeRef.remove();
                 
                 var listRef = cartRef.child(key + "/items"); 
                 listRef.once('value', function(cap){
@@ -347,6 +353,7 @@ router.route('/cart/:username')
                     })
                     
                     var cart = {
+                        _id: key,
                         names: list,
                         total: total
                     }
@@ -359,6 +366,14 @@ router.route('/cart/:username')
         });
        
     });
+});
+
+router.route('/cart/buy/:cart_id')
+
+.delete(function(req, res){
+    cartRef.child(req.params.cart_id + "/items").remove();
+    cartRef.child(req.params.cart_id).update({total: 0.00})
+    res.json("Thank you for your purchase");
 });
 
 router.route('/comments/:name')
