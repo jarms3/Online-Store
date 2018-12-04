@@ -121,7 +121,7 @@ router.route('/auth/:user/:pass')
     });
     
     
-})
+});
 
 router.route('/newuser')
 
@@ -179,7 +179,7 @@ router.route('/newuser')
         res.json("user created");
         
     });
-})
+});
 
 router.route('/confirm_email/:id')
 
@@ -201,7 +201,7 @@ router.route('/products')
             var list = new Array ();
             snap.forEach (function (data) {
               var item = {
-                key: data.key, //this is to get the ID, if needed
+                _id: data.key, //this is to get the ID, if needed
                 name: data.val().name,
                 price: data.val().price,
                 quantity: data.val().quantity,
@@ -246,7 +246,26 @@ router.route('/products')
     });
     
     res.json("Item added");
+});
+
+router.route('/products/:product_id')
+
+.put(function(req, res){
+    console.log(req.params.product_id);
+    pef.child(req.params.product_id).update({
+        name: req.body.item,
+        price: req.body.p,
+        quantity: req.body.amount,
+        tax: req.body.t,
+        description: req.body.description,
+    })
+    
+    res.json("Product updated");
 })
+
+
+
+
 
 router.route('/cart')
 
@@ -300,7 +319,7 @@ router.route('/cart')
     });
     
     
-})
+});
 
 router.route('/cart/:username')
 
@@ -336,7 +355,7 @@ router.route('/cart/:username')
         });
        
     });
-})
+});
 
 router.route('/comments/:name')
 
@@ -370,7 +389,7 @@ router.route('/comments/:name')
             }
         });
     });
-})
+});
 
 app.listen(port);
 console.log('Magic happens on port ' + port);
