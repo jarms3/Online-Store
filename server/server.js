@@ -205,7 +205,8 @@ router.route('/products')
                 name: data.val().name,
                 price: data.val().price,
                 quantity: data.val().quantity,
-                tax: data.val().tax
+                tax: data.val().tax,
+                rating: data.val().rating
               }
               list.push (item);
             })
@@ -213,6 +214,22 @@ router.route('/products')
             res.json(list);
         }
      });
+})
+
+.put(function(req, res){
+    pef.once('value', function(snap){
+       snap.forEach (function (data) {
+           if(req.body.item == data.val().name){
+               
+               var count = data.val().rateCount + 1;
+               var sum = data.val().rateSum + req.body.rate;
+               
+               pef.child(data.key).update({rating: sum/count, rateCount: count, rateSum: sum});
+               
+               res.json("Rated");
+           }
+       });
+    });
 })
 
 router.route('/cart')
