@@ -251,7 +251,6 @@ router.route('/products')
 router.route('/products/:product_id')
 
 .put(function(req, res){
-    console.log(req.params.product_id);
     pef.child(req.params.product_id).update({
         name: req.body.item,
         price: req.body.p,
@@ -262,6 +261,11 @@ router.route('/products/:product_id')
     
     res.json("Product updated");
 })
+
+.delete(function(req, res){
+    pef.child(req.params.product_id).remove();
+    res.json("Item deleted");
+});
 
 
 
