@@ -305,7 +305,7 @@ router.route('/cart/:username')
     });
 })
 
-router.route('comments/:name')
+router.route('/comments/:name')
 
 .get(function(req, res){
     var comments = new Array();
@@ -313,11 +313,27 @@ router.route('comments/:name')
         snap.forEach(function(dink){
             if(req.params.name == dink.val().name){
                 pef.child(dink.key + "/comments").once('value', function(comm){
-                    
-                    comments.push(comm.comments);
-                })
+                    comm.forEach(function(data){
+                        
+                        comments.push(data.val().comment);
+                    });
+                    res.json(comments);
+                });
                 
-                res.json(comments);
+            }
+        });
+    });
+})
+
+.post(function(req, res){
+    pef.once('value', function(snap){
+        snap.forEach(function(dink){
+            if(req.params.name == dink.val().name){
+                pef.child(dink.key + "/comments").push().set({
+                    comment: req.body.comment
+                });
+                
+                res.json("Added Comment")
             }
         });
     });
