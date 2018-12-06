@@ -481,7 +481,16 @@ router.route('/comments/:name')
 router.route('/collection')
 
 .get(function(req, res){
-    
+    var collections = new Array();
+    cRef.once('value', function(collection){
+        collection.forEach(function(data){
+          if(collection.val().view == "public")
+            collections.push(collection.val());
+        });
+        
+        res.json(collections);
+        
+    });
 })
 
 router.route('/collection/:user')
