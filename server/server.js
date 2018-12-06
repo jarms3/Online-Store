@@ -451,7 +451,6 @@ router.route('/comments/:name')
             if(req.params.name == dink.val().name){
                 pef.child(dink.key + "/comments").once('value', function(comm){
                     comm.forEach(function(data){
-                       console.log(data.val());
                         comments.push(data.val());
                     });
                     res.json(comments);
@@ -479,10 +478,31 @@ router.route('/comments/:name')
     });
 });
 
-router.route('/collection/:user')
+router.route('/collection')
 
 .get(function(req, res){
     
+})
+
+router.route('/collection/:user')
+
+.get(function(req, res){
+    var list = new Array();
+    cRef.once('value', function(snap){
+        snap.forEach(function(data){
+            if(data.val().user == req.params.user){
+                cRef.child(data.key + "/items").once('value', function(x){
+                    x.forEach(function(dingas){
+                        console.log(dingas.val());
+                        list.push(dingas.val());
+                    });
+                    
+                    res.json({name: data.val().name, description: data.val().description, items: list, view: data.val().view, _id: data.key});
+                });
+                
+            }
+        });
+    });
 })
 
 .post(function(req, res){
@@ -522,6 +542,18 @@ router.route('/collection/:user')
     })
 });
 
+router.route('/collection/view/:id')
+
+.put(function(req, res){
+    var view;
+    if(req.body.view == "private")
+        cRef.child(req.params.id).update({view: "public"});
+    else{
+        cRef.child(req.params.id).update({view: "private"});
+    }
+    
+    res.json("updated");
+})
 
 
 app.listen(port);
