@@ -481,6 +481,10 @@ router.route('/comments/:name')
 
 router.route('/collection/:user')
 
+.get(function(req, res){
+    
+})
+
 .post(function(req, res){
     var check = true;
     cRef.once('value', function(snap){
@@ -500,6 +504,8 @@ router.route('/collection/:user')
             cRef.push().set({
                 user: req.params.user,
                 view: "private",
+                name: "none",
+                description: "none"
             });
             cRef.once('value', function(snap){
                 snap.forEach(function(data){
@@ -514,7 +520,9 @@ router.route('/collection/:user')
             });
         }
     })
-})
+});
+
+
 
 app.listen(port);
 console.log('Magic happens on port ' + port);
